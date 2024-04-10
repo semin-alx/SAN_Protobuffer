@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+message Address {
+	optional string zip_code = 1;
+	optional string region = 2;	
+	optional string city = 3;		
+	optional string street = 4;		
+	optional string building = 5;	
+}
+

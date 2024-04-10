@@ -1,0 +1,8 @@
+syntax = "proto2";
+
+import "firm.proto";
+
+message FirmList {
+	repeated Firm firms = 1;
+}
+

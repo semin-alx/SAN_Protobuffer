@@ -1,0 +1,15 @@
+syntax = "proto2";
+
+import "address.proto";
+
+message Firm {
+	required string frm_name = 1;
+	optional Address address = 2;
+	optional FirmType frm_type = 3 [Default=FirmType.BUYER];
+}
+
+enum FirmType {
+	SELLER = 0;
+	BUYER = 1;
+	PREMIUM_BUYER = 2;
+}

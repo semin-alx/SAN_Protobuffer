@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.731,C:\Users\Aleksey\Documents\Embarcadero\Studio\Projects\Unit1.pas=C:\0003\0001_protobuffer\SAN_Protobuffer\EXAMPLES\Example_generic\fmain.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.195,C:\0003\0001_protobuffer\SAN_Protobuffer\EXAMPLES\Examples07_parser\generic.dproj=C:\0003\0001_protobuffer\SAN_Protobuffer\EXAMPLES\Examples07_parser\example07.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.074,=C:\0003\0001_protobuffer\SAN_Protobuffer\EXAMPLES\Examples07_parser\proto.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.731,C:\Users\Aleksey\Documents\Embarcadero\Studio\Projects\Unit1.dfm=C:\0003\0001_protobuffer\SAN_Protobuffer\EXAMPLES\Example_generic\fmain.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.496,C:\Users\Aleksey\Documents\Embarcadero\Studio\Projects\Project1.dproj=C:\0003\0001_protobuffer\SAN_Protobuffer\EXAMPLES\Example_generic\generic.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.036,=C:\Users\Aleksey\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+  </Transactions>
+</BorlandProject>

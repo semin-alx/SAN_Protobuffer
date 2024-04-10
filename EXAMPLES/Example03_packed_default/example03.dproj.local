@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.036,=C:\Users\Aleksey\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.731,C:\Users\Aleksey\Documents\Embarcadero\Studio\Projects\Unit1.pas=C:\0003\0001_protobuffer\SAN_Protobuffer\EXAMPLES\Example_generic\fmain.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.496,C:\Users\Aleksey\Documents\Embarcadero\Studio\Projects\Project1.dproj=C:\0003\0001_protobuffer\SAN_Protobuffer\EXAMPLES\Example_generic\generic.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.050,C:\0003\0001_protobuffer\SAN_Protobuffer\EXAMPLES\Example02_first_message\generic.dproj=C:\0003\0001_protobuffer\SAN_Protobuffer\EXAMPLES\Example02_first_message\example02.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.388,C:\0003\0001_protobuffer\SAN_Protobuffer\EXAMPLES\Example03_packed_default\example02.dproj=C:\0003\0001_protobuffer\SAN_Protobuffer\EXAMPLES\Example03_packed_default\example03.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.731,C:\Users\Aleksey\Documents\Embarcadero\Studio\Projects\Unit1.dfm=C:\0003\0001_protobuffer\SAN_Protobuffer\EXAMPLES\Example_generic\fmain.dfm</Transaction>
+  </Transactions>
+</BorlandProject>
