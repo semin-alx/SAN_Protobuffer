@@ -1,4 +1,4 @@
-unit semin64.protobuf;
+п»їunit semin64.protobuf;
 
 {*****************************************************************}
 {                                                                 }
@@ -16,16 +16,16 @@ uses System.Classes, System.SysUtils, System.Generics.Collections,
 
 type
 
-  // При добавлении нового типа, нужно учитывать порядок перечисления в объявлении,
-  // простые типы должны быть до ftMessage, а типы, которые реализуются в наследниках
-  // от TsanPBCustomType должны быть после ftMessage. Особенность реализации
-  // доп. проверки в TsanPBMessageType.AddFieldDef
-  TsanPBFieldType = (// Простые типы
+  // РџСЂРё РґРѕР±Р°РІР»РµРЅРёРё РЅРѕРІРѕРіРѕ С‚РёРїР°, РЅСѓР¶РЅРѕ СѓС‡РёС‚С‹РІР°С‚СЊ РїРѕСЂСЏРґРѕРє РїРµСЂРµС‡РёСЃР»РµРЅРёСЏ РІ РѕР±СЉСЏРІР»РµРЅРёРё,
+  // РїСЂРѕСЃС‚С‹Рµ С‚РёРїС‹ РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ РґРѕ ftMessage, Р° С‚РёРїС‹, РєРѕС‚РѕСЂС‹Рµ СЂРµР°Р»РёР·СѓСЋС‚СЃСЏ РІ РЅР°СЃР»РµРґРЅРёРєР°С…
+  // РѕС‚ TsanPBCustomType РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ РїРѕСЃР»Рµ ftMessage. РћСЃРѕР±РµРЅРЅРѕСЃС‚СЊ СЂРµР°Р»РёР·Р°С†РёРё
+  // РґРѕРї. РїСЂРѕРІРµСЂРєРё РІ TsanPBMessageType.AddFieldDef
+  TsanPBFieldType = (// РџСЂРѕСЃС‚С‹Рµ С‚РёРїС‹
                      ftInt32, ftSint32, ftFixed32, ftSfixed32, ftUInt32,
                      ftInt64, ftSint64, ftFixed64, ftSfixed64, ftUInt64,
                      ftFloat, ftDouble, ftBoolean, ftString, ftBytes,
                      ftMessage,
-                     // Типы от TsanPBCustomType
+                     // РўРёРїС‹ РѕС‚ TsanPBCustomType
                      ftEnum);
 
   TsanPBWireType = (wtVarint = 0,
@@ -45,10 +45,10 @@ type
     Descr: string;
   end;
 
-  // Базовый класс для всех классов данной библиотеки
-  // позволяет автоматически освобождать все подчиненные
-  // объекты. Подобный функционал есть у TComponent, но тот тянет
-  // много лишнего функционала
+  // Р‘Р°Р·РѕРІС‹Р№ РєР»Р°СЃСЃ РґР»СЏ РІСЃРµС… РєР»Р°СЃСЃРѕРІ РґР°РЅРЅРѕР№ Р±РёР±Р»РёРѕС‚РµРєРё
+  // РїРѕР·РІРѕР»СЏРµС‚ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РѕСЃРІРѕР±РѕР¶РґР°С‚СЊ РІСЃРµ РїРѕРґС‡РёРЅРµРЅРЅС‹Рµ
+  // РѕР±СЉРµРєС‚С‹. РџРѕРґРѕР±РЅС‹Р№ С„СѓРЅРєС†РёРѕРЅР°Р» РµСЃС‚СЊ Сѓ TComponent, РЅРѕ С‚РѕС‚ С‚СЏРЅРµС‚
+  // РјРЅРѕРіРѕ Р»РёС€РЅРµРіРѕ С„СѓРЅРєС†РёРѕРЅР°Р»Р°
   TsanPBObject = class(TObject)
   private
     FOwner: TsanPBObject;
@@ -63,9 +63,9 @@ type
     property Owner: TsanPBObject read FOwner;
   end;
 
-  // Данный класс используется для создания классов описывающие proto-типы
-  // содержащие набор каких-нибудь подтипов (Например: TsanPBMessageType)
-  // или других элементов (Например: TsanPBEnumType)
+  // Р”Р°РЅРЅС‹Р№ РєР»Р°СЃСЃ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РґР»СЏ СЃРѕР·РґР°РЅРёСЏ РєР»Р°СЃСЃРѕРІ РѕРїРёСЃС‹РІР°СЋС‰РёРµ proto-С‚РёРїС‹
+  // СЃРѕРґРµСЂР¶Р°С‰РёРµ РЅР°Р±РѕСЂ РєР°РєРёС…-РЅРёР±СѓРґСЊ РїРѕРґС‚РёРїРѕРІ (РќР°РїСЂРёРјРµСЂ: TsanPBMessageType)
+  // РёР»Рё РґСЂСѓРіРёС… СЌР»РµРјРµРЅС‚РѕРІ (РќР°РїСЂРёРјРµСЂ: TsanPBEnumType)
   TsanPBCustomType = class(TsanPBObject)
   private
     FName: string;
@@ -77,7 +77,7 @@ type
     property FieldType: TsanPBFieldType read FFieldType;
   end;
 
-  // Данный класс реализует описание proto-типа Enum
+  // Р”Р°РЅРЅС‹Р№ РєР»Р°СЃСЃ СЂРµР°Р»РёР·СѓРµС‚ РѕРїРёСЃР°РЅРёРµ proto-С‚РёРїР° Enum
   TsanPBEnumType = class(TsanPBCustomType)
   private
     FEnumList: TList<TsanPBEnumItem>;
@@ -91,7 +91,7 @@ type
     function StringToEnum(Value: string): integer;
   end;
 
-  // Данный класс реализует описание proto-типа Message
+  // Р”Р°РЅРЅС‹Р№ РєР»Р°СЃСЃ СЂРµР°Р»РёР·СѓРµС‚ РѕРїРёСЃР°РЅРёРµ proto-С‚РёРїР° Message
   TsanPBMessageType = class(TsanPBCustomType)
   private
     FFieldDefs: TList<TsanPBFieldDef>;
@@ -108,7 +108,7 @@ type
                          FieldName: string;
                          StoreIndex: integer): integer;
 
-    // Функция создает объект для работы с данными на основе описанного типа
+    // Р¤СѓРЅРєС†РёСЏ СЃРѕР·РґР°РµС‚ РѕР±СЉРµРєС‚ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ РґР°РЅРЅС‹РјРё РЅР° РѕСЃРЅРѕРІРµ РѕРїРёСЃР°РЅРЅРѕРіРѕ С‚РёРїР°
     function CreateInstance(OwnerA: TsanPBMessage = nil): TsanPBMessage;
 
     function FieldDefByName(FieldName: string): TsanPBFieldDef;
@@ -118,8 +118,8 @@ type
 
   end;
 
-  // Базовый класс, реализующий описание строки поля
-  // Например: repeated string a = 1;
+  // Р‘Р°Р·РѕРІС‹Р№ РєР»Р°СЃСЃ, СЂРµР°Р»РёР·СѓСЋС‰РёР№ РѕРїРёСЃР°РЅРёРµ СЃС‚СЂРѕРєРё РїРѕР»СЏ
+  // РќР°РїСЂРёРјРµСЂ: repeated string a = 1;
   TsanPBFieldDef = class(TsanPBObject)
   private
     FFieldName: string;
@@ -145,37 +145,37 @@ type
   PsanPBData = ^TsanPBData;
   PsanPBContext = ^TsanPBContext;
 
-  // Данный класс является базовым для создания класса, который будет работать
-  // с данными по указанному proto-типу
-  // Данные любого proto-типа можно представить в виде списка значений
-  // Например: string FileName = 2  - это список с одним значением
-  //           repeated CloudSignFile Files - это пустой список или список с любым
-  //           кол-вом значений
-  // Список значений реализуется через связанный список на основе TsanPBContext
-  // Список из TsanPBContext - это цепочка полей, а от каждого поля идет
-  // цепочка данных (TsanPBData)
-  // при написании наследника, необходимо реализовать:
-  //   ReadData  - метод чтения бинарных данных из Stream
-  //   WriteData - метод записи бинарных данных в Stream
-  //   Реализовать соотвествующие типу методы: AppendValue... и GetValue...
-  //   Зарегистрировать класс методом RegistryFieldClass в секции initialization
+  // Р”Р°РЅРЅС‹Р№ РєР»Р°СЃСЃ СЏРІР»СЏРµС‚СЃСЏ Р±Р°Р·РѕРІС‹Рј РґР»СЏ СЃРѕР·РґР°РЅРёСЏ РєР»Р°СЃСЃР°, РєРѕС‚РѕСЂС‹Р№ Р±СѓРґРµС‚ СЂР°Р±РѕС‚Р°С‚СЊ
+  // СЃ РґР°РЅРЅС‹РјРё РїРѕ СѓРєР°Р·Р°РЅРЅРѕРјСѓ proto-С‚РёРїСѓ
+  // Р”Р°РЅРЅС‹Рµ Р»СЋР±РѕРіРѕ proto-С‚РёРїР° РјРѕР¶РЅРѕ РїСЂРµРґСЃС‚Р°РІРёС‚СЊ РІ РІРёРґРµ СЃРїРёСЃРєР° Р·РЅР°С‡РµРЅРёР№
+  // РќР°РїСЂРёРјРµСЂ: string FileName = 2  - СЌС‚Рѕ СЃРїРёСЃРѕРє СЃ РѕРґРЅРёРј Р·РЅР°С‡РµРЅРёРµРј
+  //           repeated CloudSignFile Files - СЌС‚Рѕ РїСѓСЃС‚РѕР№ СЃРїРёСЃРѕРє РёР»Рё СЃРїРёСЃРѕРє СЃ Р»СЋР±С‹Рј
+  //           РєРѕР»-РІРѕРј Р·РЅР°С‡РµРЅРёР№
+  // РЎРїРёСЃРѕРє Р·РЅР°С‡РµРЅРёР№ СЂРµР°Р»РёР·СѓРµС‚СЃСЏ С‡РµСЂРµР· СЃРІСЏР·Р°РЅРЅС‹Р№ СЃРїРёСЃРѕРє РЅР° РѕСЃРЅРѕРІРµ TsanPBContext
+  // РЎРїРёСЃРѕРє РёР· TsanPBContext - СЌС‚Рѕ С†РµРїРѕС‡РєР° РїРѕР»РµР№, Р° РѕС‚ РєР°Р¶РґРѕРіРѕ РїРѕР»СЏ РёРґРµС‚
+  // С†РµРїРѕС‡РєР° РґР°РЅРЅС‹С… (TsanPBData)
+  // РїСЂРё РЅР°РїРёСЃР°РЅРёРё РЅР°СЃР»РµРґРЅРёРєР°, РЅРµРѕР±С…РѕРґРёРјРѕ СЂРµР°Р»РёР·РѕРІР°С‚СЊ:
+  //   ReadData  - РјРµС‚РѕРґ С‡С‚РµРЅРёСЏ Р±РёРЅР°СЂРЅС‹С… РґР°РЅРЅС‹С… РёР· Stream
+  //   WriteData - РјРµС‚РѕРґ Р·Р°РїРёСЃРё Р±РёРЅР°СЂРЅС‹С… РґР°РЅРЅС‹С… РІ Stream
+  //   Р РµР°Р»РёР·РѕРІР°С‚СЊ СЃРѕРѕС‚РІРµСЃС‚РІСѓСЋС‰РёРµ С‚РёРїСѓ РјРµС‚РѕРґС‹: AppendValue... Рё GetValue...
+  //   Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊ РєР»Р°СЃСЃ РјРµС‚РѕРґРѕРј RegistryFieldClass РІ СЃРµРєС†РёРё initialization
   TsanPBField = class(TsanPBObject)
   private
 
-    // Указатель на область данных (связанный список на основе TsanPBContext)
+    // РЈРєР°Р·Р°С‚РµР»СЊ РЅР° РѕР±Р»Р°СЃС‚СЊ РґР°РЅРЅС‹С… (СЃРІСЏР·Р°РЅРЅС‹Р№ СЃРїРёСЃРѕРє РЅР° РѕСЃРЅРѕРІРµ TsanPBContext)
     FContextPtr: PsanPBContext;
 
-    // Описание типа поля
+    // РћРїРёСЃР°РЅРёРµ С‚РёРїР° РїРѕР»СЏ
     FFieldDef: TsanPBFieldDef;
 
-    // Как только мы привяжем область данных (Связанный список из TsanPBContext)
-    // с данным объектом методом SetContext, то FValues будет содержать
-    // указатели PsanPBData на каждое значение
+    // РљР°Рє С‚РѕР»СЊРєРѕ РјС‹ РїСЂРёРІСЏР¶РµРј РѕР±Р»Р°СЃС‚СЊ РґР°РЅРЅС‹С… (РЎРІСЏР·Р°РЅРЅС‹Р№ СЃРїРёСЃРѕРє РёР· TsanPBContext)
+    // СЃ РґР°РЅРЅС‹Рј РѕР±СЉРµРєС‚РѕРј РјРµС‚РѕРґРѕРј SetContext, С‚Рѕ FValues Р±СѓРґРµС‚ СЃРѕРґРµСЂР¶Р°С‚СЊ
+    // СѓРєР°Р·Р°С‚РµР»Рё PsanPBData РЅР° РєР°Р¶РґРѕРµ Р·РЅР°С‡РµРЅРёРµ
     FValues: TList;
 
-    // Область данных выделяется с помощью MemoryManager, но MemoryManager
-    // создается только один для "корневого" объекта TsanPBField
-    // Тот, кто является "хозяином" MemoryManager, тот его создает и освобождает
+    // РћР±Р»Р°СЃС‚СЊ РґР°РЅРЅС‹С… РІС‹РґРµР»СЏРµС‚СЃСЏ СЃ РїРѕРјРѕС‰СЊСЋ MemoryManager, РЅРѕ MemoryManager
+    // СЃРѕР·РґР°РµС‚СЃСЏ С‚РѕР»СЊРєРѕ РѕРґРёРЅ РґР»СЏ "РєРѕСЂРЅРµРІРѕРіРѕ" РѕР±СЉРµРєС‚Р° TsanPBField
+    // РўРѕС‚, РєС‚Рѕ СЏРІР»СЏРµС‚СЃСЏ "С…РѕР·СЏРёРЅРѕРј" MemoryManager, С‚РѕС‚ РµРіРѕ СЃРѕР·РґР°РµС‚ Рё РѕСЃРІРѕР±РѕР¶РґР°РµС‚
     FIsOwnerMemoryManager: Boolean;
     FMemoryManager: TsanStackMemoryManager;
 
@@ -388,8 +388,8 @@ type
     constructor CreateByMsgType(AOwner: TsanPBField; MessageType: TsanPBMessageType);
     destructor Destroy; override;
 
-    function FieldByName(FieldName: string): TsanPBField;         // Если поле не найдено, будет исключение
-    function FieldByStoreIndex(StoreIndex: integer): TsanPBField; // Если поле по StoreIndex не найдено, будет nil
+    function FieldByName(FieldName: string): TsanPBField;         // Р•СЃР»Рё РїРѕР»Рµ РЅРµ РЅР°Р№РґРµРЅРѕ, Р±СѓРґРµС‚ РёСЃРєР»СЋС‡РµРЅРёРµ
+    function FieldByStoreIndex(StoreIndex: integer): TsanPBField; // Р•СЃР»Рё РїРѕР»Рµ РїРѕ StoreIndex РЅРµ РЅР°Р№РґРµРЅРѕ, Р±СѓРґРµС‚ nil
     function MessageByName(FieldName: string): TsanPBMessage;
 
     procedure Append;
@@ -1159,8 +1159,8 @@ end;
 
 procedure TsanPBField.CheckRecordIndex(Index: integer);
 begin
-  // Index со значением 0 допустим, даже если RecordCount
-  // вернет 0, в этом случае, мы вернем значение по умолчанию
+  // Index СЃРѕ Р·РЅР°С‡РµРЅРёРµРј 0 РґРѕРїСѓСЃС‚РёРј, РґР°Р¶Рµ РµСЃР»Рё RecordCount
+  // РІРµСЂРЅРµС‚ 0, РІ СЌС‚РѕРј СЃР»СѓС‡Р°Рµ, РјС‹ РІРµСЂРЅРµРј Р·РЅР°С‡РµРЅРёРµ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
   if (Index <> 0) and ((Index < 0) or (Index >= RecordCount)) then begin
     raise Exception.Create(ERR_RECORD_INDEX_OUT_OF_RANGE);
   end;
@@ -1276,11 +1276,11 @@ begin
   if VarIsEmpty(FieldDef.DefaultValue) then begin
     Result:= 0;
   end else begin
-    // varDouble - здесь это не ошибка, т.к. если в FieldDef.DefaultValue
-    // установить значение, которое соответствует типу Single
-    // функция VarType(FieldDef.DefaultValue) вернет не varSingle, а
-    // varDouble. Вообще, чтобы я не прописывал в FieldDef.DefaultValue
-    // функция VarType всегда возвращала varCurrency или varDouble
+    // varDouble - Р·РґРµСЃСЊ СЌС‚Рѕ РЅРµ РѕС€РёР±РєР°, С‚.Рє. РµСЃР»Рё РІ FieldDef.DefaultValue
+    // СѓСЃС‚Р°РЅРѕРІРёС‚СЊ Р·РЅР°С‡РµРЅРёРµ, РєРѕС‚РѕСЂРѕРµ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓРµС‚ С‚РёРїСѓ Single
+    // С„СѓРЅРєС†РёСЏ VarType(FieldDef.DefaultValue) РІРµСЂРЅРµС‚ РЅРµ varSingle, Р°
+    // varDouble. Р’РѕРѕР±С‰Рµ, С‡С‚РѕР±С‹ СЏ РЅРµ РїСЂРѕРїРёСЃС‹РІР°Р» РІ FieldDef.DefaultValue
+    // С„СѓРЅРєС†РёСЏ VarType РІСЃРµРіРґР° РІРѕР·РІСЂР°С‰Р°Р»Р° varCurrency РёР»Рё varDouble
     Result:= GetDefaultValue([varShortInt, varSmallint, varInteger,
                               varByte, varWord, varLongWord, varInt64,
                               varSingle, varCurrency, varDouble]);
