@@ -1,4 +1,4 @@
-unit fmain;
+п»їunit fmain;
 
 interface
 
@@ -38,8 +38,8 @@ var
   I: integer;
 begin
 
-  // Создадим объект, который будет работать с данными
-  // тип которых описан в FTeamType
+  // РЎРѕР·РґР°РґРёРј РѕР±СЉРµРєС‚, РєРѕС‚РѕСЂС‹Р№ Р±СѓРґРµС‚ СЂР°Р±РѕС‚Р°С‚СЊ СЃ РґР°РЅРЅС‹РјРё
+  // С‚РёРї РєРѕС‚РѕСЂС‹С… РѕРїРёСЃР°РЅ РІ FTeamType
   MyMsg:= FMyMessageType.CreateInstance;
 
   try
@@ -73,14 +73,14 @@ begin
 
   try
 
-    // Специально не заполняем, чтобы при чтении получить Default value
+    // РЎРїРµС†РёР°Р»СЊРЅРѕ РЅРµ Р·Р°РїРѕР»РЅСЏРµРј, С‡С‚РѕР±С‹ РїСЂРё С‡С‚РµРЅРёРё РїРѕР»СѓС‡РёС‚СЊ Default value
     //MyMsg.FieldByName('per_page').AppendValueAsInt32(100);
 
     MyMsg.FieldByName('samples').AppendValueAsInt32(100);
     MyMsg.FieldByName('samples').AppendValueAsInt32(200);
     MyMsg.FieldByName('samples').AppendValueAsInt32(300);
 
-    // Сериализуем в бинарный файл data.bin
+    // РЎРµСЂРёР°Р»РёР·СѓРµРј РІ Р±РёРЅР°СЂРЅС‹Р№ С„Р°Р№Р» data.bin
     MyMsg.SaveToFile('data.bin');
 
     ShowMessage('OK');

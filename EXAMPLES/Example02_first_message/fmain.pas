@@ -1,4 +1,4 @@
-unit fmain;
+п»їunit fmain;
 
 interface
 
@@ -38,23 +38,23 @@ var
   I: integer;
 begin
 
-  // Создадим объект, который будет работать с данными
-  // тип которых описан в FTeamType
+  // РЎРѕР·РґР°РґРёРј РѕР±СЉРµРєС‚, РєРѕС‚РѕСЂС‹Р№ Р±СѓРґРµС‚ СЂР°Р±РѕС‚Р°С‚СЊ СЃ РґР°РЅРЅС‹РјРё
+  // С‚РёРї РєРѕС‚РѕСЂС‹С… РѕРїРёСЃР°РЅ РІ FTeamType
   TeamMsg:= FTeamType.CreateInstance;
 
   try
 
     mmContents.Clear;
 
-    // Загружаем данные из team.bin
+    // Р—Р°РіСЂСѓР¶Р°РµРј РґР°РЅРЅС‹Рµ РёР· team.bin
     TeamMsg.LoadFromFile('team.bin');
 
-    // Читаем поле team_id
+    // Р§РёС‚Р°РµРј РїРѕР»Рµ team_id
     TeamId:= TeamMsg.FieldByName('team_id').GetValueAsInt32;
     mmContents.Lines.Add('team_id: ' + IntToStr(TeamId));
 
-    // Читаем поле members
-    // Поле определено как repeated - список значений
+    // Р§РёС‚Р°РµРј РїРѕР»Рµ members
+    // РџРѕР»Рµ РѕРїСЂРµРґРµР»РµРЅРѕ РєР°Рє repeated - СЃРїРёСЃРѕРє Р·РЅР°С‡РµРЅРёР№
     MembersField:= TeamMsg.FieldByName('members');
 
     for I := 1 to MembersField.RecordCount do begin
@@ -73,20 +73,20 @@ var
   TeamMsg: TsanPBMessage;
 begin
 
-  // Создадим объект, который будет работать с данными
-  // тип которых описан в FTeamType
+  // РЎРѕР·РґР°РґРёРј РѕР±СЉРµРєС‚, РєРѕС‚РѕСЂС‹Р№ Р±СѓРґРµС‚ СЂР°Р±РѕС‚Р°С‚СЊ СЃ РґР°РЅРЅС‹РјРё
+  // С‚РёРї РєРѕС‚РѕСЂС‹С… РѕРїРёСЃР°РЅ РІ FTeamType
   TeamMsg:= FTeamType.CreateInstance;
 
   try
 
-    // Заполняем данными
+    // Р—Р°РїРѕР»РЅСЏРµРј РґР°РЅРЅС‹РјРё
     TeamMsg.FieldByName('team_id').AppendValueAsInt32(100);
 
     TeamMsg.FieldByName('members').AppendValueAsString('Ivan');
     TeamMsg.FieldByName('members').AppendValueAsString('Sergey');
     TeamMsg.FieldByName('members').AppendValueAsString('Oleg');
 
-    // Сериализуем в бинарный файл team.bin
+    // РЎРµСЂРёР°Р»РёР·СѓРµРј РІ Р±РёРЅР°СЂРЅС‹Р№ С„Р°Р№Р» team.bin
     TeamMsg.SaveToFile('team.bin');
 
     ShowMessage('OK');
@@ -100,15 +100,15 @@ end;
 procedure TForm1.FormCreate(Sender: TObject);
 begin
 
-  // Описываем наш Protocol Buffer тип
+  // РћРїРёСЃС‹РІР°РµРј РЅР°С€ Protocol Buffer С‚РёРї
 
   // message Team {
   //   optional int32 team_id = 1;
   //   repeated string members = 2;
   // }
 
-  // Создаем объект, который будет содержать описание типа
-  // Не забываем его потом освободить (см. OnDestroy)
+  // РЎРѕР·РґР°РµРј РѕР±СЉРµРєС‚, РєРѕС‚РѕСЂС‹Р№ Р±СѓРґРµС‚ СЃРѕРґРµСЂР¶Р°С‚СЊ РѕРїРёСЃР°РЅРёРµ С‚РёРїР°
+  // РќРµ Р·Р°Р±С‹РІР°РµРј РµРіРѕ РїРѕС‚РѕРј РѕСЃРІРѕР±РѕРґРёС‚СЊ (СЃРј. OnDestroy)
   FTeamType:= TsanPBMessageType.Create(nil, 'Team');
 
   FTeamType.AddFieldDef(ftoOptional, ftInt32,  nil, 'team_id', 1);
