@@ -10,10 +10,9 @@
 {*****************************************************************}
 
 {
-    TsanStackMemoryManager - стековый менеджер памяти
-  выделяет память блоками кратными размеру страниц в
-  ОС с помощью функции VirtualAlloc. Выделение/освобождение
-  памяти работает по принцепу стека, например, выделяем блоки:
+    TsanStackMemoryManager - stack memory manager
+  Memory allocation/deallocation works on the stack principle,
+  for example, we allocate blocks:
 
   a:= Mng.GetMem(100);
   b:= Mng.GetMem(15);
@@ -21,18 +20,22 @@
   d:= Mng.GetMem(20);
   e:= Mng.GetMem(23);
 
-  Теперь освободим блок c: Mng.FreeMem(c);
-  В этом случае, будут освобождены блоки c, d, e
+  Now let's free block c:
 
-  Этот механизм очень удобен, когда мы выделяем много раз память
-  и хотим разом все освободить начиная с определенного блока.
+  Mng.FreeMem(c);
+
+  In this case, blocks c, d, e will be freed too.
+
+  This mechanism is very convenient when we allocate
+  memory many times and want to free everything at once,
+  starting from a certain block.
 
 }
 
 
 interface
 
-uses winapi.windows, System.Classes, System.SysUtils;
+uses System.Classes, System.SysUtils;
 
 type
 
@@ -68,26 +71,27 @@ type
     procedure FreeMem(P: Pointer);
     procedure Clear;
 
-    // Запись всей памяти менеджера в текстовый файл (Для отладки)
+    // Write all manager memory to a text file (For debug)
     procedure DumpToFile(FileName: string);
 
-    // Когда true, если при освобождении менеджера обнаружится неосвобожденная
-    // память, будет вызвано исключение (по умолчанию выключено). Метод Clear
-    // не производит проверку на утечку.
+    // When true, if unreleased memory is found when the manager is freed,
+    // an exception will be raised (off by default).
+    // Note: The Clear method does not check for leaks.
     property CheckLeakMemory: Boolean read FCheckLeakMemory write FCheckLeakMemory;
 
-    // Для статистики
-    // Кол-во страниц в менеджере. Это не страницы памяти в Windows
-    // это страницы памяти, которые менеджер выделяет в процессе работы
-    // Каждая страница имеет свой размер
+    // For statistics
+    // Number of pages in the manager. These are not memory pages in Windows,
+    // these are memory pages that the manager allocates during operation
+    // Each page has its own size.
     property PageCount: integer read GetPageCount;
 
-    // Общая выделенная память менеджером у Windows
+    // Total allocated memory by manager
     property TotalMemory: integer read GetTotalMemory;
 
   end;
 
-  // Снятие дампа с памяти и записи его в читабельном виде в текстовой файл
+  // Helper function.
+  // Taking a dump from memory and writing it in a readable form to a text file
   procedure DumpToTxtFile(P: Pointer; Count: Cardinal; FileName: string; Append: Boolean = False);
 
 implementation
@@ -118,10 +122,14 @@ begin
   System.SysUtils.FileWrite(LogHandle, AnsiText[1], Length(AnsiText));
 end;
 
+{$HINTS OFF}
+// H2443 Inline function 'FileClose' has not been expanded
+// because unit 'Winapi.Windows' is not specified in USES list
 procedure CloseLog(LogHandle: THandle);
 begin
   System.SysUtils.FileClose(LogHandle);
 end;
+{$HINTS ON}
 
 procedure InternalDumpToTxtFile(P: Pointer; Count: Cardinal; LogHandle: THandle);
 var
@@ -181,15 +189,10 @@ var
   pNextPage: PsanStackMemoryPage;
 begin
 
-  // Вначале я выделял память по SystemInfo.dwPageSize,
-  // но оказалось, что выделить можно не более 31017 раз, далее
-  // была ошибка в VirualAlloc (code 8)
-  // Поэтому с каждым разом будем увеличивать блок памяти в два раза
-  // пока не достигнем FMinPageSize * 512 далее будем выделять уже
-  // такими блоками
+  // Each time we will increase the new memory block by two times until
+  // we reach FMinPageSize * 512, then we will allocate in such blocks
 
-  // Расчитаем размер следующей страницы
-  // Не хочу использовать функцию со степенью
+  // I don't want to use a function with a power
 
   case FPages.Count of
     0: AllocSize:= FMinPageSize;
@@ -239,8 +242,11 @@ procedure TsanStackMemoryManager.AllocPageMemory(pPage: PsanStackMemoryPage;
   AllocSize: Cardinal);
 begin
 
-  pPage^.Address:= VirtualAlloc(nil, AllocSize, MEM_RESERVE or MEM_COMMIT, PAGE_READWRITE);
+  System.GetMem(pPage^.Address, AllocSize);
   pPage^.Size:= AllocSize;
+
+//  pPage^.Address:= VirtualAlloc(nil, AllocSize, MEM_RESERVE or MEM_COMMIT, PAGE_READWRITE);
+//  pPage^.Size:= AllocSize;
 
   if Not Assigned(pPage^.Address) then RaiseLastOSError;
 
@@ -367,7 +373,8 @@ end;
 
 procedure TsanStackMemoryManager.FreePageMemory(pPage: PsanStackMemoryPage);
 begin
-  VirtualFree(pPage^.Address, 0, MEM_RELEASE);
+  System.FreeMem(pPage^.Address);
+  // VirtualFree(pPage^.Address, 0, MEM_RELEASE);
 end;
 
 procedure TsanStackMemoryManager.FreePages;
@@ -438,12 +445,14 @@ begin
 end;
 
 function TsanStackMemoryManager.GetMinPageSize: Cardinal;
-var
-  SystemInfo: TSystemInfo;
+//var
+//  SystemInfo: TSystemInfo;
 begin
 
-  GetSystemInfo(SystemInfo);
-  Result:= SystemInfo.dwPageSize;
+//  GetSystemInfo(SystemInfo);
+//  Result:= SystemInfo.dwPageSize;
+
+  Result:= 4 * 1024;
 
 end;
 
