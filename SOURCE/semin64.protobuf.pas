@@ -181,12 +181,11 @@ type
 
     FTempStream: TMemoryStream;
 
-    procedure ErrorNotApplicable;
     procedure CheckRecordIndex(Index: integer);
-    function GetDefaultValue(const AllowedTypes: array of TVarType): Variant;
+
   protected
-    function AppendValue: PsanPBData;
-    function GetValue(RecordIndex: integer): PsanPBData;
+    function AllocPBData: PsanPBData;
+    function GetPBData(RecordIndex: integer): PsanPBData;
     procedure SetContext(pContext: PsanPBContext);
 
     function ReadVarint(Stream: TStream): UInt64;
@@ -202,6 +201,10 @@ type
     procedure ReadData(Stream: TStream; WireType: TsanPBWireType; Size: Int64); virtual; abstract;
     procedure WriteData(Stream: TStream); virtual; abstract;
 
+    function InternalAppendValue(Value: Variant): integer; virtual;  abstract;
+    function InternalGetValue(RecordIndex: integer = 0): Variant; virtual; abstract;
+    function GetEmptyValue: Variant; virtual; abstract;
+
     property ContextPtr: PsanPBContext read FContextPtr write SetContext;
     property MemoryManager: TsanStackMemoryManager read FMemoryManager;
     property TempStream: TMemoryStream read FTempStream;
@@ -211,26 +214,29 @@ type
     constructor Create(AOwner: TsanPBField; FieldDefA: TsanPBFieldDef); virtual;
     destructor Destroy; override;
 
-    function AppendValueAsInt32(Value: integer): integer; virtual;
-    function AppendValueAsUInt32(Value: cardinal): integer; virtual;
-    function AppendValueAsInt64(Value: Int64): integer; virtual;
-    function AppendValueAsUInt64(Value: UInt64): integer; virtual;
-    function AppendValueAsFloat(Value: single): integer; virtual;
-    function AppendValueAsDouble(Value: double): integer; virtual;
-    function AppendValueAsBoolean(Value: Boolean): integer; virtual;
-    function AppendValueAsString(Value: string): integer; virtual;
-    function AppendValueAsBytes(Value: TBytes): integer; virtual;
-    function AppendValueFromStream(Stream: TStream): integer; virtual;
+    function AppendValueAsInt32(Value: integer): integer;
+    function AppendValueAsUInt32(Value: cardinal): integer;
+    function AppendValueAsInt64(Value: Int64): integer;
+    function AppendValueAsUInt64(Value: UInt64): integer;
+    function AppendValueAsFloat(Value: single): integer;
+    function AppendValueAsDouble(Value: double): integer;
+    function AppendValueAsBoolean(Value: Boolean): integer;
+    function AppendValueAsString(Value: string): integer;
+    function AppendValueAsBytes(Value: TBytes): integer;
+    function AppendValueFromStream(Stream: TStream): integer;
 
-    function GetValueAsInt32(RecordIndex: integer = 0): integer; virtual;
-    function GetValueAsUInt32(RecordIndex: integer = 0): cardinal; virtual;
-    function GetValueAsInt64(RecordIndex: integer = 0): Int64; virtual;
-    function GetValueAsUInt64(RecordIndex: integer = 0): UInt64; virtual;
-    function GetValueAsFloat(RecordIndex: integer = 0): single; virtual;
-    function GetValueAsDouble(RecordIndex: integer = 0): double; virtual;
-    function GetValueAsBoolean(RecordIndex: integer = 0): Boolean; virtual;
+    function GetValueAsInt32(RecordIndex: integer = 0): integer;
+    function GetValueAsUInt32(RecordIndex: integer = 0): cardinal;
+    function GetValueAsInt64(RecordIndex: integer = 0): Int64;
+    function GetValueAsUInt64(RecordIndex: integer = 0): UInt64;
+    function GetValueAsFloat(RecordIndex: integer = 0): single;
+    function GetValueAsDouble(RecordIndex: integer = 0): double;
+    function GetValueAsBoolean(RecordIndex: integer = 0): Boolean;
     function GetValueAsString(RecordIndex: integer = 0): string; virtual;
-    function GetValueAsBytes(RecordIndex: integer = 0): TBytes; virtual;
+    function GetValueAsBytes(RecordIndex: integer = 0): TBytes;
+
+    function AppendValue(Value: Variant): integer;
+    function GetValue(RecordIndex: integer = 0): Variant;
 
     function IsEmpty: Boolean;
     property RecordCount: integer read GetRecordCount;
@@ -249,6 +255,7 @@ type
     procedure WriteFixSizeData(Stream: TStream; RecordIndex: integer); virtual; abstract;
     procedure ReadData(Stream: TStream; WireType: TsanPBWireType; Size: Int64); override;
     procedure WriteData(Stream: TStream); override;
+    function GetEmptyValue: Variant; override;
   end;
 
   TsanPBInt32Field = class(TsanPBFixSizeField)
@@ -256,90 +263,77 @@ type
     procedure CheckRange(Value: Int64);
     procedure ReadFixSizeData(Stream: TStream); override;
     procedure WriteFixSizeData(Stream: TStream; RecordIndex: integer); override;
-  public
-    function AppendValueAsInt32(Value: integer): integer; override;
-    function GetValueAsInt32(RecordIndex: integer): integer; override;
-    function GetValueAsString(RecordIndex: integer): string; override;
+    function InternalAppendValue(Value: Variant): integer; override;
+    function InternalGetValue(RecordIndex: integer = 0): Variant; override;
   end;
 
   TsanPBUInt32Field = class(TsanPBFixSizeField)
   protected
     procedure ReadFixSizeData(Stream: TStream); override;
     procedure WriteFixSizeData(Stream: TStream; RecordIndex: integer); override;
-  public
-    function AppendValueAsUInt32(Value: cardinal): integer; override;
-    function GetValueAsUInt32(RecordIndex: integer): cardinal; override;
-    function GetValueAsString(RecordIndex: integer): string; override;
+    function InternalAppendValue(Value: Variant): integer; override;
+    function InternalGetValue(RecordIndex: integer = 0): Variant; override;
   end;
 
   TsanPBInt64Field = class(TsanPBFixSizeField)
   protected
     procedure ReadFixSizeData(Stream: TStream); override;
     procedure WriteFixSizeData(Stream: TStream; RecordIndex: integer); override;
-  public
-    function AppendValueAsInt64(Value: Int64): integer; override;
-    function GetValueAsInt64(RecordIndex: integer): Int64; override;
-    function GetValueAsString(RecordIndex: integer): string; override;
+    function InternalAppendValue(Value: Variant): integer; override;
+    function InternalGetValue(RecordIndex: integer = 0): Variant; override;
   end;
 
   TsanPBUInt64Field = class(TsanPBFixSizeField)
   protected
     procedure ReadFixSizeData(Stream: TStream); override;
     procedure WriteFixSizeData(Stream: TStream; RecordIndex: integer); override;
-  public
-    function AppendValueAsUInt64(Value: UInt64): integer; override;
-    function GetValueAsUInt64(RecordIndex: integer): UInt64; override;
-    function GetValueAsString(RecordIndex: integer): string; override;
+    function InternalAppendValue(Value: Variant): integer; override;
+    function InternalGetValue(RecordIndex: integer = 0): Variant; override;
   end;
 
   TsanPBFloatField = class(TsanPBFixSizeField)
   protected
     procedure ReadFixSizeData(Stream: TStream); override;
     procedure WriteFixSizeData(Stream: TStream; RecordIndex: integer); override;
-  public
-    function AppendValueAsFloat(Value: single): integer; override;
-    function GetValueAsFloat(RecordIndex: integer): single; override;
-    function GetValueAsString(RecordIndex: integer): string; override;
+    function InternalAppendValue(Value: Variant): integer; override;
+    function InternalGetValue(RecordIndex: integer = 0): Variant; override;
   end;
 
   TsanPBDoubleField = class(TsanPBFixSizeField)
   protected
     procedure ReadFixSizeData(Stream: TStream); override;
     procedure WriteFixSizeData(Stream: TStream; RecordIndex: integer); override;
-  public
-    function AppendValueAsDouble(Value: double): integer; override;
-    function GetValueAsDouble(RecordIndex: integer): double; override;
-    function GetValueAsString(RecordIndex: integer): string; override;
+    function InternalAppendValue(Value: Variant): integer; override;
+    function InternalGetValue(RecordIndex: integer = 0): Variant; override;
   end;
 
   TsanPBBooleanField = class(TsanPBFixSizeField)
   protected
     procedure ReadFixSizeData(Stream: TStream); override;
     procedure WriteFixSizeData(Stream: TStream; RecordIndex: integer); override;
-  public
-    function AppendValueAsBoolean(Value: Boolean): integer; override;
-    function GetValueAsBoolean(RecordIndex: integer): Boolean; override;
-    function GetValueAsString(RecordIndex: integer): string; override;
+    function GetEmptyValue: Variant; override;
+    function InternalAppendValue(Value: Variant): integer; override;
+    function InternalGetValue(RecordIndex: integer = 0): Variant; override;
   end;
 
   TsanPBStringField = class(TsanPBField)
   protected
     procedure ReadData(Stream: TStream; WireType: TsanPBWireType; Size: Int64); override;
     procedure WriteData(Stream: TStream); override;
-  public
-    function AppendValueAsString(Value: string): integer; override;
-    function GetValueAsString(RecordIndex: integer): string; override;
+    function GetEmptyValue: Variant; override;
+    function InternalAppendValue(Value: Variant): integer; override;
+    function InternalGetValue(RecordIndex: integer = 0): Variant; override;
   end;
 
   TsanPBBytesField = class(TsanPBField)
   protected
     procedure ReadData(Stream: TStream; WireType: TsanPBWireType; Size: Int64); override;
     procedure WriteData(Stream: TStream); override;
+    function InternalAppendValue(Value: Variant): integer; override;
+    function InternalGetValue(RecordIndex: integer = 0): Variant; override;
+    function GetEmptyValue: Variant; override;
   public
-    function AppendValueAsBytes(Value: TBytes): integer; override;
-    function AppendValueFromStream(Stream: TStream): integer; override;
     function GetValueAsString(RecordIndex: integer): string; override;
-    function GetValueAsBytes(RecordIndex: integer): TBytes; override;
   end;
 
   TsanPBData = record
@@ -357,8 +351,8 @@ type
   protected
     procedure ReadFixSizeData(Stream: TStream); override;
     procedure WriteFixSizeData(Stream: TStream; RecordIndex: integer); override;
+    function InternalAppendValue(Value: Variant): integer; override;
   public
-    function AppendValueAsString(Value: string): integer; override;
     function GetValueAsString(RecordIndex: integer): string; override;
   end;
 
@@ -382,6 +376,9 @@ type
     function GetRecordCount: integer; override;
     procedure ReadData(Stream: TStream; WireType: TsanPBWireType; Size: Int64); override;
     procedure WriteData(Stream: TStream); override;
+    function InternalAppendValue(Value: Variant): integer; override;
+    function InternalGetValue(RecordIndex: integer = 0): Variant; override;
+    function GetEmptyValue: Variant; override;
   public
 
     constructor Create(AOwner: TsanPBField; FieldDefA: TsanPBFieldDef); override;
@@ -419,7 +416,6 @@ resourcestring
   ERR_INVALID_CUSTOM_TYPE = 'Not the appropriate type of TsanPBCustomType for %s.%s';
   ERR_UNKNOWN_FIELD_TYPE = 'Unknown field type';
   ERR_OWNER_NOT_IS_MESSAGEFIELD = 'AOwner object must be TsanPBMessageField or nil';
-  ERR_NOT_APPLICABLE_TYPE = 'Not applicable for this type';
   ERR_FIELD_NOT_FOUND = 'Field %s not found';
   ERR_FIELDDEF_NOT_FOUND = 'FieldDef %s not found';
   ERR_FIELD_NOT_FOUND_SI = 'Field (StoreIndex = %d) not found';
@@ -434,9 +430,20 @@ resourcestring
   ERR_DUPLICATE_ENUM_VALUE = 'Duplicate enum value %s';
   ERR_ENUM_DESCR_NOT_FOUND = 'Enum %s not found for type %s';
   ERR_RECORD_INDEX_OUT_OF_RANGE = 'Record index out of range';
-  ERR_INVALID_DEFAULT_VALUE_TYPE = 'Invalid default value type: %s';
   ERR_FIELD_IS_NOT_MESSAGE = 'Field %s is not message type';
+
+  ERR_EXPECT_INT32_VALUE = 'Expect Int32 value';
+  ERR_EXPECT_UINT32_VALUE = 'Expect UInt32 value';
+  ERR_EXPECT_INT64_VALUE = 'Expect Int64 value';
+  ERR_EXPECT_UINT64_VALUE = 'Expect UInt64 value';
+  ERR_EXPECT_SINGLE_VALUE = 'Expect Single value';
+  ERR_EXPECT_DOUBLE_VALUE = 'Expect Double value';
+  ERR_EXPECT_BOOLEAN_VALUE = 'Expect Boolean value';
+  ERR_EXPECT_TBYTES_VALUE = 'Expect TBytes value';
+  ERR_EXPECT_ENUM_INDEX_OR_NAME = 'Expect enum index or name';
+
   ERR_NO_DATA = 'No data';
+  ERR_NOT_APPLICABLE = 'Not applicable';
 
   UNKNOWN_ENUM_VALUE = 'Unknown enum value (%d) for type %s';
 
@@ -631,7 +638,7 @@ begin
     raise Exception.Create(ERR_METHOD_ONLY_FOR_NOT_ROOT);
   end;
 
-  pData:= AppendValue;
+  pData:= AllocPBData;
   pData^.pStorage:= CreateContext;
 
   FRecordIndex:= RecordCount - 1;
@@ -813,11 +820,26 @@ begin
 
 end;
 
+function TsanPBMessage.GetEmptyValue: Variant;
+begin
+  raise Exception.Create(ERR_NOT_APPLICABLE);
+end;
+
 function TsanPBMessage.GetRecordCount: integer;
 begin
   if IsRoot
     then Result:= 1
     else Result:= inherited;
+end;
+
+function TsanPBMessage.InternalAppendValue(Value: Variant): integer;
+begin
+  raise Exception.Create(ERR_NOT_APPLICABLE);
+end;
+
+function TsanPBMessage.InternalGetValue(RecordIndex: integer): Variant;
+begin
+  raise Exception.Create(ERR_NOT_APPLICABLE);
 end;
 
 function TsanPBMessage.IsRoot: Boolean;
@@ -948,7 +970,7 @@ begin
     raise Exception.Create(ERR_METHOD_ONLY_FOR_NOT_ROOT);
   end;
 
-  pData:= GetValue(Index);
+  pData:= GetPBData(Index);
   SetMsgContext(PsanPBContext(pData^.pStorage));
   FRecordIndex:= Index;
 
@@ -1066,7 +1088,7 @@ end;
 
 { TsanPBField }
 
-function TsanPBField.AppendValue: PsanPBData;
+function TsanPBField.AllocPBData: PsanPBData;
 var
   pLast: PsanPBData;
 begin
@@ -1097,64 +1119,64 @@ begin
 
 end;
 
+function TsanPBField.AppendValue(Value: Variant): integer;
+begin
+  Result:= InternalAppendValue(Value);
+end;
+
 function TsanPBField.AppendValueAsBoolean(Value: Boolean): integer;
 begin
-  Result:= 0;
-  ErrorNotApplicable;
+  Result:= AppendValue(Value);
 end;
 
 function TsanPBField.AppendValueAsBytes(Value: TBytes): integer;
 begin
-  Result:= 0;
-  ErrorNotApplicable;
+  Result:= AppendValue(Value);
 end;
 
 function TsanPBField.AppendValueAsDouble(Value: double): integer;
 begin
-  Result:= 0;
-  ErrorNotApplicable;
+  Result:= AppendValue(Value);
 end;
 
 function TsanPBField.AppendValueAsFloat(Value: single): integer;
 begin
-  Result:= 0;
-  ErrorNotApplicable;
+  Result:= AppendValue(Value);
 end;
 
 function TsanPBField.AppendValueAsInt32(Value: integer): integer;
 begin
-  Result:= 0;
-  ErrorNotApplicable;
+  Result:= AppendValue(Value);
 end;
 
 function TsanPBField.AppendValueAsInt64(Value: Int64): integer;
 begin
-  Result:= 0;
-  ErrorNotApplicable;
+  Result:= AppendValue(Value);
 end;
 
 function TsanPBField.AppendValueAsString(Value: string): integer;
 begin
-  Result:= 0;
-  ErrorNotApplicable;
+  Result:= AppendValue(Value);
 end;
 
 function TsanPBField.AppendValueAsUInt32(Value: cardinal): integer;
 begin
-  Result:= 0;
-  ErrorNotApplicable;
+  Result:= AppendValue(Value);
 end;
 
 function TsanPBField.AppendValueAsUInt64(Value: UInt64): integer;
 begin
-  Result:= 0;
-  ErrorNotApplicable;
+  Result:= AppendValue(Value);
 end;
 
 function TsanPBField.AppendValueFromStream(Stream: TStream): integer;
+var
+  Bytes: TBytes;
 begin
-  Result:= 0;
-  ErrorNotApplicable;
+  Stream.Position := 0;
+  SetLength(Bytes, Stream.Size);
+  Stream.Read(pointer(Bytes)^, Stream.Size);
+  Result:= AppendValue(Bytes);
 end;
 
 procedure TsanPBField.CheckRecordIndex(Index: integer);
@@ -1199,52 +1221,36 @@ begin
   inherited;
 end;
 
-procedure TsanPBField.ErrorNotApplicable;
-begin
-  raise Exception.Create(ERR_NOT_APPLICABLE_TYPE);
-end;
-
-function TsanPBField.GetDefaultValue(const AllowedTypes: array of TVarType): Variant;
-var
-  ValueType: TVarType;
-  AllowedType: TVarType;
-begin
-
-  ValueType:= VarType(FieldDef.DefaultValue);
-
-  for AllowedType in AllowedTypes do begin
-    if ValueType = AllowedType then begin
-      Result:= FieldDef.DefaultValue;
-      Exit;
-    end;
-  end;
-
-  raise Exception.Create(Format(ERR_INVALID_DEFAULT_VALUE_TYPE,
-    [VarTypeAsText(ValueType)]));
-
-end;
-
 function TsanPBField.GetRecordCount: integer;
 begin
   Result:= FValues.Count;
 end;
 
-function TsanPBField.GetValue(RecordIndex: integer): PsanPBData;
+function TsanPBField.GetPBData(RecordIndex: integer): PsanPBData;
 begin
   Result:= FValues[RecordIndex];
 end;
 
-function TsanPBField.GetValueAsBoolean(RecordIndex: integer): Boolean;
+function TsanPBField.GetValue(RecordIndex: integer): Variant;
 begin
 
   CheckRecordIndex(RecordIndex);
 
-  if VarIsEmpty(FieldDef.DefaultValue) then begin
-    Result:= False;
+  if IsEmpty then begin
+    if Not VarIsEmpty(FieldDef.DefaultValue) then begin
+      Result:= FieldDef.DefaultValue;
+    end else begin
+      Result:= GetEmptyValue;
+    end;
   end else begin
-    Result:= GetDefaultValue([varBoolean]);
+    Result:= InternalGetValue(RecordIndex);
   end;
 
+end;
+
+function TsanPBField.GetValueAsBoolean(RecordIndex: integer): Boolean;
+begin
+  Result:= GetValue(RecordIndex);
 end;
 
 function TsanPBField.GetValueAsBytes(RecordIndex: integer): TBytes;
@@ -1255,104 +1261,37 @@ end;
 
 function TsanPBField.GetValueAsDouble(RecordIndex: integer): double;
 begin
-
-  CheckRecordIndex(RecordIndex);
-
-  if VarIsEmpty(FieldDef.DefaultValue) then begin
-    Result:= 0;
-  end else begin
-    Result:= GetDefaultValue([varShortInt, varSmallint, varInteger,
-                              varByte, varWord, varLongWord, varInt64,
-                              varSingle, varCurrency, varDouble]);
-  end;
-
+  Result:= GetValue(RecordIndex);
 end;
 
 function TsanPBField.GetValueAsFloat(RecordIndex: integer): single;
 begin
-
-  CheckRecordIndex(RecordIndex);
-
-  if VarIsEmpty(FieldDef.DefaultValue) then begin
-    Result:= 0;
-  end else begin
-    // varDouble - здесь это не ошибка, т.к. если в FieldDef.DefaultValue
-    // установить значение, которое соответствует типу Single
-    // функция VarType(FieldDef.DefaultValue) вернет не varSingle, а
-    // varDouble. Вообще, чтобы я не прописывал в FieldDef.DefaultValue
-    // функция VarType всегда возвращала varCurrency или varDouble
-    Result:= GetDefaultValue([varShortInt, varSmallint, varInteger,
-                              varByte, varWord, varLongWord, varInt64,
-                              varSingle, varCurrency, varDouble]);
-  end;
-
+  Result:= GetValue(RecordIndex);
 end;
 
 function TsanPBField.GetValueAsInt32(RecordIndex: integer): integer;
 begin
-
-  CheckRecordIndex(RecordIndex);
-
-  if VarIsEmpty(FieldDef.DefaultValue) then begin
-    Result:= 0;
-  end else begin
-    Result:= GetDefaultValue([varShortInt, varSmallint, varInteger,
-                              varByte, varWord, varLongWord]);
-  end;
-
+  Result:= GetValue(RecordIndex);
 end;
 
 function TsanPBField.GetValueAsInt64(RecordIndex: integer): Int64;
 begin
-
-  CheckRecordIndex(RecordIndex);
-
-  if VarIsEmpty(FieldDef.DefaultValue) then begin
-    Result:= 0;
-  end else begin
-    Result:= GetDefaultValue([varShortInt, varSmallint, varInteger,
-                              varByte, varWord, varLongWord, varInt64]);
-  end;
-
+  Result:= GetValue(RecordIndex);
 end;
 
 function TsanPBField.GetValueAsString(RecordIndex: integer): string;
 begin
-
-  CheckRecordIndex(RecordIndex);
-
-  if VarIsEmpty(FieldDef.DefaultValue) then begin
-    Result:= '';
-  end else begin
-    Result:= GetDefaultValue([varString, varUString]);
-  end;
-
+  Result:= GetValue(RecordIndex);
 end;
 
 function TsanPBField.GetValueAsUInt32(RecordIndex: integer): cardinal;
 begin
-
-  CheckRecordIndex(RecordIndex);
-
-  if VarIsEmpty(FieldDef.DefaultValue) then begin
-    Result:= 0;
-  end else begin
-    Result:= GetDefaultValue([varByte, varWord, varLongWord]);
-  end;
-
+  Result:= GetValue(RecordIndex);
 end;
 
 function TsanPBField.GetValueAsUInt64(RecordIndex: integer): UInt64;
 begin
-
-  CheckRecordIndex(RecordIndex);
-
-  if VarIsEmpty(FieldDef.DefaultValue) then begin
-    Result:= 0;
-  end else begin
-    Result:= GetDefaultValue([varByte, varWord, varLongWord, varInt64]);
-  end;
-
+  Result:= GetValue(RecordIndex);
 end;
 
 function TsanPBField.IsEmpty: Boolean;
@@ -1523,16 +1462,6 @@ end;
 
 { TsanPBInt32Field }
 
-function TsanPBInt32Field.AppendValueAsInt32(Value: integer): integer;
-var
-  pData: PsanPBData;
-begin
-  pData:= AppendValue;
-  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(Integer));
-  Move(Value, pData^.pStorage^, SizeOf(Integer));
-  Result:= FValues.Count - 1;
-end;
-
 procedure TsanPBInt32Field.CheckRange(Value: Int64);
 begin
   if (Value < -2147483648) or (Value > 2147483647) then begin
@@ -1541,23 +1470,35 @@ begin
   end;
 end;
 
-function TsanPBInt32Field.GetValueAsInt32(RecordIndex: integer): integer;
+function TsanPBInt32Field.InternalAppendValue(Value: Variant): integer;
 var
   pData: PsanPBData;
+  ValueA: integer;
 begin
 
-  Result:= inherited;
-
-  if Not IsEmpty then begin
-    pData:= GetValue(RecordIndex);
-    Move(pData^.pStorage^, Result, Sizeof(Integer));
+  try
+    ValueA:= Value;
+  except
+    on E: EVariantError do begin
+      raise Exception.Create(ERR_EXPECT_INT32_VALUE);
+    end;
   end;
+
+  pData:= AllocPBData;
+  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(Integer));
+  Move(ValueA, pData^.pStorage^, SizeOf(Integer));
+  Result:= FValues.Count - 1;
 
 end;
 
-function TsanPBInt32Field.GetValueAsString(RecordIndex: integer): string;
+function TsanPBInt32Field.InternalGetValue(RecordIndex: integer): Variant;
+var
+  pData: PsanPBData;
+  ValueA: integer;
 begin
-  Result:= IntToStr(GetValueAsInt32(RecordIndex));
+  pData:= GetPBData(RecordIndex);
+  Move(pData^.pStorage^, ValueA, Sizeof(Integer));
+  Result:= ValueA;
 end;
 
 procedure TsanPBInt32Field.ReadFixSizeData(Stream: TStream);
@@ -1596,7 +1537,7 @@ begin
 
   end;
 
-  AppendValueAsInt32(R);
+  AppendValue(R);
 
 end;
 
@@ -1605,7 +1546,7 @@ var
   V: integer;
 begin
 
-  V:= GetValueAsInt32(RecordIndex);
+  V:= GetValue(RecordIndex);
 
   case FieldDef.FieldType of
 
@@ -1634,34 +1575,40 @@ begin
 end;
 
 { TsanPBUInt32Field }
-
-function TsanPBUInt32Field.AppendValueAsUInt32(Value: cardinal): integer;
+function TsanPBUInt32Field.InternalAppendValue(Value: Variant): integer;
 var
   pData: PsanPBData;
-begin
-  pData:= AppendValue;
-  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(cardinal));
-  Move(Value, pData^.pStorage^, SizeOf(cardinal));
-  Result:= FValues.Count - 1;
-end;
-
-function TsanPBUInt32Field.GetValueAsString(RecordIndex: integer): string;
-begin
-  Result:= UIntToStr(GetValueAsUInt32(RecordIndex));
-end;
-
-function TsanPBUInt32Field.GetValueAsUInt32(RecordIndex: integer): cardinal;
-var
-  pData: PsanPBData;
+  ValueA: Cardinal;
 begin
 
-  Result:= inherited;
-
-  if Not IsEmpty then begin
-    pData:= GetValue(RecordIndex);
-    Move(pData^.pStorage^, Result, Sizeof(cardinal));
+  try
+    ValueA:= Value;
+  except
+    on E: EVariantError do begin
+      raise Exception.Create(ERR_EXPECT_UINT32_VALUE);
+    end;
   end;
 
+  // For some reason, the compiler does not check range for Cardinal type
+  if (Value < 0) or (Value > 4294967295) then begin
+    raise Exception.Create(ERR_EXPECT_UINT32_VALUE);
+  end;
+
+  pData:= AllocPBData;
+  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(Cardinal));
+  Move(ValueA, pData^.pStorage^, SizeOf(Cardinal));
+  Result:= FValues.Count - 1;
+
+end;
+
+function TsanPBUInt32Field.InternalGetValue(RecordIndex: integer): Variant;
+var
+  pData: PsanPBData;
+  ValueA: Cardinal;
+begin
+  pData:= GetPBData(RecordIndex);
+  Move(pData^.pStorage^, ValueA, Sizeof(cardinal));
+  Result:= ValueA;
 end;
 
 procedure TsanPBUInt32Field.ReadFixSizeData(Stream: TStream);
@@ -1701,7 +1648,7 @@ begin
 
   end;
 
-  AppendValueAsUInt32(R);
+  AppendValue(R);
 
 end;
 
@@ -1711,7 +1658,7 @@ var
   V: cardinal;
 begin
 
-  V:= GetValueAsUInt32(RecordIndex);
+  V:= GetValue(RecordIndex);
 
   case FieldDef.FieldType of
 
@@ -1734,34 +1681,35 @@ begin
 end;
 
 { TsanPBInt64Field }
-
-function TsanPBInt64Field.AppendValueAsInt64(Value: Int64): integer;
+function TsanPBInt64Field.InternalAppendValue(Value: Variant): integer;
 var
   pData: PsanPBData;
-begin
-  pData:= AppendValue;
-  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(Int64));
-  Move(Value, pData^.pStorage^, SizeOf(Int64));
-  Result:= FValues.Count - 1;
-end;
-
-function TsanPBInt64Field.GetValueAsInt64(RecordIndex: integer): Int64;
-var
-  pData: PsanPBData;
+  ValueA: Int64;
 begin
 
-  Result:= inherited;
-
-  if Not IsEmpty then begin
-    pData:= GetValue(RecordIndex);
-    Move(pData^.pStorage^, Result, Sizeof(Int64));
+  try
+    ValueA:= Value;
+  except
+    on E: EVariantError do begin
+      raise Exception.Create(ERR_EXPECT_INT64_VALUE);
+    end;
   end;
 
+  pData:= AllocPBData;
+  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(Int64));
+  Move(ValueA, pData^.pStorage^, SizeOf(Int64));
+  Result:= FValues.Count - 1;
+
 end;
 
-function TsanPBInt64Field.GetValueAsString(RecordIndex: integer): string;
+function TsanPBInt64Field.InternalGetValue(RecordIndex: integer): Variant;
+var
+  pData: PsanPBData;
+  ValueA: Int64;
 begin
-  Result:= IntToStr(GetValueAsInt64(RecordIndex));
+  pData:= GetPBData(RecordIndex);
+  Move(pData^.pStorage^, ValueA, Sizeof(Int64));
+  Result:= ValueA;
 end;
 
 procedure TsanPBInt64Field.ReadFixSizeData(Stream: TStream);
@@ -1795,7 +1743,7 @@ begin
 
   end;
 
-  AppendValueAsInt64(R);
+  AppendValue(R);
 
 end;
 
@@ -1805,7 +1753,7 @@ var
   V: Int64;
 begin
 
-  V:= GetValueAsInt64(RecordIndex);
+  V:= GetValue(RecordIndex);
 
   case FieldDef.FieldType of
 
@@ -1834,34 +1782,39 @@ begin
 end;
 
 { TsanPBUInt64Field }
-
-function TsanPBUInt64Field.AppendValueAsUInt64(Value: UInt64): integer;
+function TsanPBUInt64Field.InternalAppendValue(Value: Variant): integer;
 var
   pData: PsanPBData;
-begin
-  pData:= AppendValue;
-  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(UInt64));
-  Move(Value, pData^.pStorage^, SizeOf(UInt64));
-  Result:= FValues.Count - 1;
-end;
-
-function TsanPBUInt64Field.GetValueAsString(RecordIndex: integer): string;
-begin
-  Result:= UIntToStr(GetValueAsUInt64(RecordIndex));
-end;
-
-function TsanPBUInt64Field.GetValueAsUInt64(RecordIndex: integer): UInt64;
-var
-  pData: PsanPBData;
+  ValueA: UInt64;
 begin
 
-  Result:= inherited;
-
-  if Not IsEmpty then begin
-    pData:= GetValue(RecordIndex);
-    Move(pData^.pStorage^, Result, Sizeof(UInt64));
+  try
+    ValueA:= Value;
+  except
+    on E: EVariantError do begin
+      raise Exception.Create(ERR_EXPECT_UINT64_VALUE);
+    end;
   end;
 
+  if (Value < 0) then begin
+    raise Exception.Create(ERR_EXPECT_UINT64_VALUE);
+  end;
+
+  pData:= AllocPBData;
+  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(UInt64));
+  Move(ValueA, pData^.pStorage^, SizeOf(UInt64));
+  Result:= FValues.Count - 1;
+
+end;
+
+function TsanPBUInt64Field.InternalGetValue(RecordIndex: integer): Variant;
+var
+  pData: PsanPBData;
+  ValueA: UInt64;
+begin
+  pData:= GetPBData(RecordIndex);
+  Move(pData^.pStorage^, ValueA, Sizeof(UInt64));
+  Result:= ValueA;
 end;
 
 procedure TsanPBUInt64Field.ReadFixSizeData(Stream: TStream);
@@ -1889,7 +1842,7 @@ begin
 
   end;
 
-  AppendValueAsUInt64(R);
+  AppendValue(R);
 
 end;
 
@@ -1899,7 +1852,7 @@ var
   V: UInt64;
 begin
 
-  V:= GetValueAsUInt64(RecordIndex);
+  V:= GetValue(RecordIndex);
 
   case FieldDef.FieldType of
 
@@ -1922,34 +1875,35 @@ begin
 end;
 
 { TsanPBDoubleField }
-
-function TsanPBDoubleField.AppendValueAsDouble(Value: double): integer;
+function TsanPBDoubleField.InternalAppendValue(Value: Variant): integer;
 var
   pData: PsanPBData;
-begin
-  pData:= AppendValue;
-  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(double));
-  Move(Value, pData^.pStorage^, SizeOf(double));
-  Result:= FValues.Count - 1;
-end;
-
-function TsanPBDoubleField.GetValueAsDouble(RecordIndex: integer): double;
-var
-  pData: PsanPBData;
+  ValueA: double;
 begin
 
-  Result:= inherited;
-
-  if Not IsEmpty then begin
-    pData:= GetValue(RecordIndex);
-    Move(pData^.pStorage^, Result, Sizeof(double));
+  try
+    ValueA:= Value;
+  except
+    on E: EVariantError do begin
+      raise Exception.Create(ERR_EXPECT_DOUBLE_VALUE);
+    end;
   end;
 
+  pData:= AllocPBData;
+  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(double));
+  Move(ValueA, pData^.pStorage^, SizeOf(double));
+  Result:= FValues.Count - 1;
+
 end;
 
-function TsanPBDoubleField.GetValueAsString(RecordIndex: integer): string;
+function TsanPBDoubleField.InternalGetValue(RecordIndex: integer): Variant;
+var
+  pData: PsanPBData;
+  ValueA: double;
 begin
-  Result:= FloatToStr(GetValueAsDouble(RecordIndex));
+  pData:= GetPBData(RecordIndex);
+  Move(pData^.pStorage^, ValueA, Sizeof(double));
+  Result:= ValueA;
 end;
 
 procedure TsanPBDoubleField.ReadFixSizeData(Stream: TStream);
@@ -1957,8 +1911,8 @@ var
   R: double;
 begin
 
-  ReadStream(Stream, R, 8);
-  AppendValueAsDouble(R);
+  ReadStream(Stream, R, Sizeof(double));
+  AppendValue(R);
 
 end;
 
@@ -1967,33 +1921,34 @@ procedure TsanPBDoubleField.WriteFixSizeData(Stream: TStream;
 var
   V: double;
 begin
-  V:= GetValueAsDouble(RecordIndex);
-  Stream.Write(V, 8);
+  V:= GetValue(RecordIndex);
+  Stream.Write(V, Sizeof(double));
 end;
 
 { TsanPBStringField }
 
-function TsanPBStringField.AppendValueAsString(Value: string): integer;
+function TsanPBStringField.GetEmptyValue: Variant;
+begin
+  Result:= '';
+end;
+
+function TsanPBStringField.InternalAppendValue(Value: Variant): integer;
 var
   pData: PsanPBData;
+  ValueA: string;
 begin
-  pData:= AppendValue;
-  pData^.pStorage:= FMemoryManager.GetMem(Value);
+  ValueA:= Value;
+  pData:= AllocPBData;
+  pData^.pStorage:= FMemoryManager.GetMem(ValueA);
   Result:= FValues.Count - 1;
 end;
 
-function TsanPBStringField.GetValueAsString(RecordIndex: integer): string;
+function TsanPBStringField.InternalGetValue(RecordIndex: integer): Variant;
 var
   pData: PsanPBData;
 begin
-
-  Result:= inherited;
-
-  if Not IsEmpty then begin
-    pData:= GetValue(RecordIndex);
-    Result:= PChar(pData^.pStorage);
-  end;
-
+  pData:= GetPBData(RecordIndex);
+  Result:= String(PChar(pData^.pStorage));
 end;
 
 procedure TsanPBStringField.ReadData(Stream: TStream; WireType: TsanPBWireType;
@@ -2005,7 +1960,7 @@ begin
   try
     FillChar(P^, Size+1, 0);
     ReadStream(Stream, P^, Size);
-    AppendValueAsString(Utf8ToString(P));
+    AppendValue(Utf8ToString(P));
   finally
     FreeMem(P);
   end;
@@ -2021,7 +1976,7 @@ begin
 
   for I := 1 to RecordCount do begin
 
-    Utf8Str:= Utf8Encode(GetValueAsString(I-1));
+    Utf8Str:= Utf8Encode(GetValue(I-1));
 
     P:= @Utf8Str[1];
     Size:= Length(Utf8Str);
@@ -2035,38 +1990,40 @@ begin
 end;
 
 { TsanPBBooleanField }
+function TsanPBBooleanField.GetEmptyValue: Variant;
+begin
+  Result:= False;
+end;
 
-function TsanPBBooleanField.AppendValueAsBoolean(Value: Boolean): integer;
+function TsanPBBooleanField.InternalAppendValue(Value: Variant): integer;
 var
   pData: PsanPBData;
+  ValueA: boolean;
 begin
-  pData:= AppendValue;
-  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(Boolean));
-  Move(Value, pData^.pStorage^, SizeOf(Boolean));
+
+  try
+    ValueA:= Value;
+  except
+    on E: EVariantError do begin
+      raise Exception.Create(ERR_EXPECT_BOOLEAN_VALUE);
+    end;
+  end;
+
+  pData:= AllocPBData;
+  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(boolean));
+  Move(ValueA, pData^.pStorage^, SizeOf(boolean));
   Result:= FValues.Count - 1;
+
 end;
 
-function TsanPBBooleanField.GetValueAsBoolean(RecordIndex: integer): Boolean;
+function TsanPBBooleanField.InternalGetValue(RecordIndex: integer): Variant;
 var
   pData: PsanPBData;
+  ValueA: Boolean;
 begin
-
-  Result:= inherited;
-
-  if Not IsEmpty then begin
-    pData:= GetValue(RecordIndex);
-    Move(pData^.pStorage^, Result, Sizeof(Boolean));
-  end;
-
-end;
-
-function TsanPBBooleanField.GetValueAsString(RecordIndex: integer): string;
-begin
-  if GetValueAsBoolean(RecordIndex) then begin
-    Result:= 'True';
-  end else begin
-    Result:= 'False';
-  end;
+  pData:= GetPBData(RecordIndex);
+  Move(pData^.pStorage^, ValueA, Sizeof(Boolean));
+  Result:= ValueA;
 end;
 
 procedure TsanPBBooleanField.ReadFixSizeData(Stream: TStream);
@@ -2074,7 +2031,7 @@ var
   R: Byte;
 begin
   ReadStream(Stream, R, 1);
-  AppendValueAsBoolean(Boolean(R));
+  AppendValue(Boolean(R));
 end;
 
 procedure TsanPBBooleanField.WriteFixSizeData(Stream: TStream;
@@ -2087,66 +2044,12 @@ begin
 end;
 
 { TsanPBBytesField }
-
-function TsanPBBytesField.AppendValueAsBytes(Value: TBytes): integer;
+function TsanPBBytesField.GetEmptyValue: Variant;
 var
-  pData: PsanPBData;
-  Size: integer;
-  pSrc, pDst: PByte;
+  EmptyValue: TBytes;
 begin
-
-  pData:= AppendValue;
-
-  Size:= Length(Value);
-
-  if Size > 0 then begin
-
-    pData^.pStorage:= FMemoryManager.GetMem(Size + SizeOf(Size));
-    Move(Size, pData^.pStorage^, SizeOf(Size));
-
-    pSrc:= @Value[0];
-    pDst:= Pointer(Int64(pData^.pStorage) + SizeOf(Size));
-
-    Move(pSrc^, pDst^, Size);
-
-  end else begin
-    pData^.pStorage:= nil;
-  end;
-
-  Result:= FValues.Count - 1;
-
-end;
-
-function TsanPBBytesField.AppendValueFromStream(Stream: TStream): integer;
-var
-  Bytes: TBytes;
-begin
-  Stream.Position := 0;
-  SetLength(Bytes, Stream.Size);
-  Stream.Read(pointer(Bytes)^, Stream.Size);
-  Result:= AppendValueAsBytes(Bytes);
-end;
-
-function TsanPBBytesField.GetValueAsBytes(RecordIndex: integer): TBytes;
-var
-  pSize: PInteger;
-  pData: PsanPBData;
-  pSrc, pDst: PByte;
-begin
-
-  Result:= inherited;
-  if IsEmpty then Exit;
-
-  pData:= GetValue(RecordIndex);
-
-  pSize:= pData^.pStorage;
-  SetLength(Result, pSize^);
-
-  pSrc:= Pointer(Int64(pData^.pStorage) + SizeOf(pSize^));
-  pDst:= @Result[0];
-
-  Move(pSrc^, pDst^, pSize^);
-
+  SetLength(EmptyValue, 0);
+  Result:= EmptyValue;
 end;
 
 function TsanPBBytesField.GetValueAsString(RecordIndex: integer): string;
@@ -2155,7 +2058,7 @@ var
   I: integer;
 begin
 
-  Data:= GetValueAsBytes(RecordIndex);
+  Data:= GetValue(RecordIndex);
 
   Result:= '[';
 
@@ -2174,6 +2077,66 @@ begin
 
 end;
 
+function TsanPBBytesField.InternalAppendValue(Value: Variant): integer;
+var
+  pData: PsanPBData;
+  Size: integer;
+  pSrc, pDst: PByte;
+  ValueA: TBytes;
+begin
+
+  try
+    ValueA:= Value;
+  except
+    on E: EVariantError do begin
+      raise Exception.Create(ERR_EXPECT_TBYTES_VALUE);
+    end;
+  end;
+
+  pData:= AllocPBData;
+
+  Size:= Length(ValueA);
+
+  if Size > 0 then begin
+
+    pData^.pStorage:= FMemoryManager.GetMem(Size + SizeOf(Size));
+    Move(Size, pData^.pStorage^, SizeOf(Size));
+
+    pSrc:= @ValueA[0];
+    pDst:= Pointer(Int64(pData^.pStorage) + SizeOf(Size));
+
+    Move(pSrc^, pDst^, Size);
+
+  end else begin
+    pData^.pStorage:= nil;
+  end;
+
+  Result:= FValues.Count - 1;
+
+end;
+
+function TsanPBBytesField.InternalGetValue(RecordIndex: integer): Variant;
+var
+  pSize: PInteger;
+  pData: PsanPBData;
+  pSrc, pDst: PByte;
+  ValueA: TBytes;
+begin
+
+  pData:= GetPBData(RecordIndex);
+
+  pSize:= pData^.pStorage;
+  SetLength(ValueA, pSize^);
+
+  pSrc:= Pointer(Int64(pData^.pStorage) + SizeOf(pSize^));
+  pDst:= @ValueA[0];
+
+  Move(pSrc^, pDst^, pSize^);
+
+  Result:= ValueA;
+
+end;
+
 procedure TsanPBBytesField.ReadData(Stream: TStream; WireType: TsanPBWireType;
   Size: Int64);
 var
@@ -2186,7 +2149,7 @@ begin
   P:= @R[0];
 
   ReadStream(Stream, P^, Size);
-  AppendValueAsBytes(R);
+  AppendValue(R);
 
 end;
 
@@ -2200,7 +2163,7 @@ begin
 
   for I := 1 to RecordCount do begin
 
-    Buf:= GetValueAsBytes(I-1);
+    Buf:= GetValue(I-1);
 
     P:= @Buf[0];
     Size:= Length(Buf);
@@ -2214,6 +2177,11 @@ begin
 end;
 
 { TsanPBNumberField }
+
+function TsanPBFixSizeField.GetEmptyValue: Variant;
+begin
+  Result:= 0;
+end;
 
 procedure TsanPBFixSizeField.ReadData(Stream: TStream; WireType: TsanPBWireType;
   Size: Int64);
@@ -2240,34 +2208,35 @@ begin
 end;
 
 { TsanPBFloatField }
-
-function TsanPBFloatField.AppendValueAsFloat(Value: single): integer;
+function TsanPBFloatField.InternalAppendValue(Value: Variant): integer;
 var
   pData: PsanPBData;
-begin
-  pData:= AppendValue;
-  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(single));
-  Move(Value, pData^.pStorage^, SizeOf(single));
-  Result:= FValues.Count - 1;
-end;
-
-function TsanPBFloatField.GetValueAsFloat(RecordIndex: integer): single;
-var
-  pData: PsanPBData;
+  ValueA: single;
 begin
 
-  Result:= inherited;
-
-  if Not IsEmpty then begin
-    pData:= GetValue(RecordIndex);
-    Move(pData^.pStorage^, Result, Sizeof(single));
+  try
+    ValueA:= Value;
+  except
+    on E: EVariantError do begin
+      raise Exception.Create(ERR_EXPECT_SINGLE_VALUE);
+    end;
   end;
 
+  pData:= AllocPBData;
+  pData^.pStorage:= FMemoryManager.GetMem(SizeOf(single));
+  Move(ValueA, pData^.pStorage^, SizeOf(single));
+  Result:= FValues.Count - 1;
+
 end;
 
-function TsanPBFloatField.GetValueAsString(RecordIndex: integer): string;
+function TsanPBFloatField.InternalGetValue(RecordIndex: integer): Variant;
+var
+  pData: PsanPBData;
+  ValueA: single;
 begin
-  Result:= FloatToStr(GetValueAsFloat(RecordIndex));
+  pData:= GetPBData(RecordIndex);
+  Move(pData^.pStorage^, ValueA, Sizeof(single));
+  Result:= ValueA;
 end;
 
 procedure TsanPBFloatField.ReadFixSizeData(Stream: TStream);
@@ -2275,7 +2244,7 @@ var
   R: single;
 begin
 
-  ReadStream(Stream, R, 4);
+  ReadStream(Stream, R, Sizeof(single));
   AppendValueAsFloat(R);
 
 end;
@@ -2286,7 +2255,7 @@ var
   V: single;
 begin
   V:= GetValueAsFloat(RecordIndex);
-  Stream.Write(V, 4);
+  Stream.Write(V, Sizeof(single));
 end;
 
 procedure TsanPBFixSizeField.WriteData(Stream: TStream);
@@ -2338,15 +2307,6 @@ begin
 end;
 
 { TsanPBEnumField }
-
-function TsanPBEnumField.AppendValueAsString(Value: string): integer;
-var
-  EnumType: TsanPBEnumType;
-begin
-  EnumType:= TsanPBEnumType(FieldDef.FCustomType);
-  Result:= AppendValueAsInt32(EnumType.StringToEnum(Value));
-end;
-
 function TsanPBEnumField.GetValueAsString(RecordIndex: integer): string;
 var
   EnumType: TsanPBEnumType;
@@ -2355,6 +2315,23 @@ begin
   EnumType:= TsanPBEnumType(FieldDef.FCustomType);
   EnumValue:= GetValueAsInt32(RecordIndex);
   Result:= EnumType.EnumToString(EnumValue);
+end;
+
+function TsanPBEnumField.InternalAppendValue(Value: Variant): integer;
+var
+  EnumType: TsanPBEnumType;
+begin
+
+  if VarIsStr(Value) then begin
+    EnumType:= TsanPBEnumType(FieldDef.FCustomType);
+    Result:= inherited InternalAppendValue(EnumType.StringToEnum(Value));
+  end else
+  if VarIsNumeric(Value) then begin
+    Result:= inherited InternalAppendValue(Value);
+  end else begin
+    raise Exception.Create(ERR_EXPECT_ENUM_INDEX_OR_NAME);
+  end;
+
 end;
 
 procedure TsanPBEnumField.ReadFixSizeData(Stream: TStream);
@@ -2367,7 +2344,7 @@ begin
   CheckRange(V);
   R:= Integer(V);
 
-  AppendValueAsInt32(R);
+  AppendValue(R);
 
 end;
 
@@ -2376,7 +2353,7 @@ procedure TsanPBEnumField.WriteFixSizeData(Stream: TStream;
 var
   V: integer;
 begin
-  V:= GetValueAsInt32(RecordIndex);
+  V:= GetValue(RecordIndex);
   WriteVarint(Stream, V);
 end;
 
