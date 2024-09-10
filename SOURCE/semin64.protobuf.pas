@@ -129,6 +129,7 @@ type
     FCustomType: TsanPBCustomType;
     FDataPacket: Boolean;
     FDefaultValue: Variant;
+    FOneOfName: string;
     function GetFieldTypeName: string;
   public
     constructor Create(AOwner: TsanPBMessageType);
@@ -140,6 +141,7 @@ type
     property DataPacked: Boolean read FDataPacket write FDataPacket;
     property DefaultValue: Variant read FDefaultValue write FDefaultValue;
     property FieldTypeName: string read GetFieldTypeName;
+    property OneOfName: string read FOneOfName write FOneOfName;
   end;
 
   PsanPBData = ^TsanPBData;
@@ -182,6 +184,10 @@ type
     FTempStream: TMemoryStream;
 
     procedure CheckRecordIndex(Index: integer);
+    procedure ClearOneOfFields;
+    procedure SetDefaultOneOfFields;
+
+    function IsOneOf: Boolean;
 
   protected
     function AllocPBData: PsanPBData;
@@ -196,8 +202,10 @@ type
     procedure ReadStream(Stream: TStream; var Buffer; Count: Longint);
     procedure ReadHdr(Stream: TStream; var WireType: TsanPBWireType; var StoreIndex: integer);
     procedure WriteHdr(Stream: TStream; WireType: TsanPBWireType; StoreIndex: integer);
+    procedure Clear;
 
     function GetRecordCount: integer; virtual;
+    procedure BeforeWrite; virtual;
     procedure ReadData(Stream: TStream; WireType: TsanPBWireType; Size: Int64); virtual; abstract;
     procedure WriteData(Stream: TStream); virtual; abstract;
 
@@ -441,6 +449,7 @@ resourcestring
   ERR_EXPECT_BOOLEAN_VALUE = 'Expect Boolean value';
   ERR_EXPECT_TBYTES_VALUE = 'Expect TBytes value';
   ERR_EXPECT_ENUM_INDEX_OR_NAME = 'Expect enum index or name';
+  ERR_ONEOF_FIELD_WRONG_OPTION = 'A oneof field %s can be only ftoOptional';
 
   ERR_NO_DATA = 'No data';
   ERR_NOT_APPLICABLE = 'Not applicable';
@@ -625,6 +634,7 @@ begin
   FCustomType:= nil;
   FDataPacket:= True;
   FDefaultValue:= Unassigned;
+  FOneOfName:= '';
 end;
 
 { TsanPBMessageField }
@@ -985,6 +995,10 @@ begin
   TempStream.Seek(0, soFromBeginning);
 
   for I := 1 to FFields.Count do begin
+    TsanPBField(FFields[I-1]).BeforeWrite;
+  end;
+
+  for I := 1 to FFields.Count do begin
     TsanPBField(FFields[I-1]).WriteData(TempStream);
   end;
 
@@ -1121,6 +1135,7 @@ end;
 
 function TsanPBField.AppendValue(Value: Variant): integer;
 begin
+  if IsOneOf then ClearOneOfFields;
   Result:= InternalAppendValue(Value);
 end;
 
@@ -1179,6 +1194,11 @@ begin
   Result:= AppendValue(Bytes);
 end;
 
+procedure TsanPBField.BeforeWrite;
+begin
+  if IsOneOf then SetDefaultOneOfFields;
+end;
+
 procedure TsanPBField.CheckRecordIndex(Index: integer);
 begin
   // Index со значением 0 допустим, даже если RecordCount
@@ -1186,6 +1206,11 @@ begin
   if (Index <> 0) and ((Index < 0) or (Index >= RecordCount)) then begin
     raise Exception.Create(ERR_RECORD_INDEX_OUT_OF_RANGE);
   end;
+end;
+
+procedure TsanPBField.Clear;
+begin
+  FValues.Clear;
 end;
 
 constructor TsanPBField.Create(AOwner: TsanPBField; FieldDefA: TsanPBFieldDef);
@@ -1294,9 +1319,74 @@ begin
   Result:= GetValue(RecordIndex);
 end;
 
+procedure TsanPBField.ClearOneOfFields;
+var
+  OwnerMessage: TsanPBMessage;
+  Field: TsanPBField;
+  I: integer;
+begin
+
+  if FFieldDef.FOption <> ftoOptional then begin
+    raise Exception.Create(Format(ERR_ONEOF_FIELD_WRONG_OPTION,
+      [FFieldDef.FieldName]));
+  end;
+
+  if Assigned(Owner) then begin
+
+    OwnerMessage:= TsanPBMessage(Owner);
+
+    for I:= 1 to OwnerMessage.FFields.Count do begin
+
+      Field:= TsanPBField(OwnerMessage.FFields.Items[I-1]);
+
+      if (Field <> Self)
+          and (Field.FieldDef.OneOfName = FieldDef.OneOfName)
+      then begin
+        Field.Clear;
+      end;
+
+    end;
+
+  end;
+
+end;
+
+procedure TsanPBField.SetDefaultOneOfFields;
+var
+  OwnerMessage: TsanPBMessage;
+  Field: TsanPBField;
+  IsAllFieldsEmpty: Boolean;
+  I: integer;
+begin
+
+  if Assigned(Owner) and (Not VarIsEmpty(FieldDef.DefaultValue)) then begin
+
+    IsAllFieldsEmpty:= True;
+
+    OwnerMessage:= TsanPBMessage(Owner);
+    for I:= 1 to OwnerMessage.FFields.Count do begin
+      Field:= TsanPBField(OwnerMessage.FFields.Items[I-1]);
+      if Field.FieldDef.OneOfName = FieldDef.OneOfName then begin
+        IsAllFieldsEmpty:= IsAllFieldsEmpty and Field.IsEmpty;
+      end;
+    end;
+
+    if IsAllFieldsEmpty then begin
+      AppendValue(FieldDef.DefaultValue);
+    end;
+
+  end;
+
+end;
+
 function TsanPBField.IsEmpty: Boolean;
 begin
   Result:= RecordCount = 0;
+end;
+
+function TsanPBField.IsOneOf: Boolean;
+begin
+  Result:= FFieldDef.OneOfName <> '';
 end;
 
 procedure TsanPBField.ReadHdr(Stream: TStream; var WireType: TsanPBWireType;
